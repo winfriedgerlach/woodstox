@@ -599,10 +599,7 @@ public final class ReaderConfig
         rc.mMaxDtdDepth = mMaxDtdDepth;
         rc.mAllowSurrogatePairEntities = mAllowSurrogatePairEntities;
         if (mSpecialProperties != null) {
-            int len = mSpecialProperties.length;
-            Object[] specProps = new Object[len];
-            System.arraycopy(mSpecialProperties, 0, specProps, 0, len);
-            rc.mSpecialProperties = specProps;
+            rc.mSpecialProperties = Arrays.copyOf(mSpecialProperties, mSpecialProperties.length);
         }
         return rc;
     }

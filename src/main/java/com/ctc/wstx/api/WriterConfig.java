@@ -1,6 +1,7 @@
 package com.ctc.wstx.api;
 
 import java.lang.ref.SoftReference;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -332,9 +333,7 @@ public final class WriterConfig
         Object[] specProps;
 
         if (mSpecialProperties != null) {
-            int len = mSpecialProperties.length;
-            specProps = new Object[len];
-            System.arraycopy(mSpecialProperties, 0, specProps, 0, len);
+            specProps = Arrays.copyOf(mSpecialProperties, mSpecialProperties.length);
         } else {
             specProps = null;
         }

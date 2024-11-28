@@ -1,5 +1,7 @@
 package com.ctc.wstx.util;
 
+import java.util.Arrays;
+
 /**
  * Data container similar {@link java.util.List} (from storage perspective),
  * but that can be used in multiple ways. For some uses it acts more like
@@ -51,8 +53,7 @@ public final class StringVector
     }
 
     public String[] asArray() {
-        String[] strs = new String[mSize];
-        System.arraycopy(mStrings, 0, strs, 0, mSize);
+        String[] strs = Arrays.copyOf(mStrings, mSize);
         return strs;
     }
 
@@ -74,20 +75,16 @@ public final class StringVector
 
     public void addString(String str) {
         if (mSize == mStrings.length) {
-            String[] old = mStrings;
-            int oldSize = old.length;
-            mStrings = new String[oldSize + (oldSize << 1)];
-            System.arraycopy(old, 0, mStrings, 0, oldSize);
+            int oldSize = mStrings.length;
+            mStrings = Arrays.copyOf(mStrings, oldSize + (oldSize << 1));
         }
         mStrings[mSize++] = str;
     }
 
     public void addStrings(String str1, String str2) {
         if ((mSize + 2) > mStrings.length) {
-            String[] old = mStrings;
-            int oldSize = old.length;
-            mStrings = new String[oldSize + (oldSize << 1)];
-            System.arraycopy(old, 0, mStrings, 0, oldSize);
+            int oldSize = mStrings.length;
+            mStrings = Arrays.copyOf(mStrings, oldSize + (oldSize << 1));
         }
         mStrings[mSize] = str1;
         mStrings[mSize+1] = str2;

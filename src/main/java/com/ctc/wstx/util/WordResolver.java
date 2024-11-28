@@ -395,8 +395,7 @@ public final class WordResolver
                     return null;
                 }
                 
-                result = new char[mSize];
-                System.arraycopy(mData, 0, result, 0, mSize);
+                result = Arrays.copyOf(mData, mSize);
             }
 
             return new WordResolver(mWords, result);

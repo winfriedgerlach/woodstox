@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -2391,8 +2392,7 @@ public abstract class StreamScanner
     protected final char[] expandBy50Pct(char[] buf)
     {
         int len = buf.length;
-        char[] newBuf = new char[len + (len >> 1)];
-        System.arraycopy(buf, 0, newBuf, 0, len);
+        char[] newBuf = Arrays.copyOf(buf, len + (len >> 1));
         return newBuf;
     }
 

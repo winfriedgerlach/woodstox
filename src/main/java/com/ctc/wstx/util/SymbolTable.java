@@ -15,6 +15,8 @@
 
 package com.ctc.wstx.util;
 
+import java.util.Arrays;
+
 /**
  * This class is a kind of specialized type-safe Map, from char array to
  * String value. Specialization means that in addition to type-safety
@@ -585,14 +587,8 @@ public class SymbolTable {
      * change is made to a derived symbol table.
      */
     private void copyArrays() {
-        String[] oldSyms = mSymbols;
-        int size = oldSyms.length;
-        mSymbols = new String[size];
-        System.arraycopy(oldSyms, 0, mSymbols, 0, size);
-        Bucket[] oldBuckets = mBuckets;
-        size = oldBuckets.length;
-        mBuckets = new Bucket[size];
-        System.arraycopy(oldBuckets, 0, mBuckets, 0, size);
+        mSymbols = Arrays.copyOf(mSymbols, mSymbols.length);
+        mBuckets = Arrays.copyOf(mBuckets, mBuckets.length);
     }
 
     /**
