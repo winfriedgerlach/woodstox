@@ -76,7 +76,8 @@ public final class StringVector
         if (mSize == mStrings.length) {
             String[] old = mStrings;
             int oldSize = old.length;
-            mStrings = new String[oldSize + (oldSize << 1)];
+            // grow array by 50%
+            mStrings = new String[oldSize + (oldSize >> 1)];
             System.arraycopy(old, 0, mStrings, 0, oldSize);
         }
         mStrings[mSize++] = str;
@@ -86,7 +87,8 @@ public final class StringVector
         if ((mSize + 2) > mStrings.length) {
             String[] old = mStrings;
             int oldSize = old.length;
-            mStrings = new String[oldSize + (oldSize << 1)];
+            // grow array by 50%
+            mStrings = new String[oldSize + (oldSize >> 1)];
             System.arraycopy(old, 0, mStrings, 0, oldSize);
         }
         mStrings[mSize] = str1;
@@ -186,35 +188,6 @@ public final class StringVector
         }
         return -1;
     }
-
-    /*
-      // Not needed any more
-    public Iterator findAllByValueNonInterned(String value) {
-        String first = null;
-        ArrayList all = null;
-        for (int index = mSize-1; index > 0; index -= 2) {
-            String currVal = mStrings[index];
-            if (currVal == value || (currVal != null && currVal.equals(value))) {
-                if (first == null) {
-                    first = mStrings[index-1];
-                } else {
-                    if (all == null) {
-                        all = new ArrayList();
-                        all.add(first);
-                    }
-                    all.add(mStrings[index-1]);
-                }
-            }
-        }
-        if (all != null) {
-            return all.iterator();
-        }
-        if (first != null) {
-            return new SingletonIterator(first);
-        }
-        return DataUtil.emptyIterator();
-    }
-    */
 
     /*
     ///////////////////////////////////////////////////////
