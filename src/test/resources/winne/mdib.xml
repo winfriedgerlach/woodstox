@@ -1,0 +1,114 @@
+<ns4:GetMdDescriptionResponse
+		xmlns:ns4="http://standards.ieee.org/downloads/11073/11073-10207-2017/message"
+		MdibVersion="0" SequenceId="0">
+<ns4:MdDescription
+	xmlns:ns2="http://standards.ieee.org/downloads/11073/11073-10207-2017/extension"
+	xmlns:ns3="http://standards.ieee.org/downloads/11073/11073-10207-2017/participant">
+	<ns3:Mds Handle="handle_mds">
+		<ns2:Extension>
+			<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+		</ns2:Extension>
+		<!-- <ns3:Sco Handle="handle_mds_sco"> <ns3:Operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			Handle="handle_metric_sco" OperationTarget="handle_metric" xsi:type="ns3:SetValueOperationDescriptor" 
+			/> <ns3:Operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Handle="handle_context_sco" 
+			OperationTarget="handle_context" xsi:type="ns3:SetContextStateOperationDescriptor" 
+			/> <ns3:Operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Handle="handle_alert_signal_latching_sco" 
+			OperationTarget="handle_alert_signal_latching" xsi:type="ns3:SetAlertStateOperationDescriptor" 
+			/> -->
+		<ns3:Sco Handle="handle_mds_sco">
+			<ns3:Operation
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				Handle="handle_activate" OperationTarget="none"
+				xsi:type="ns3:ActivateOperationDescriptor" />
+			<ns3:Operation
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				Handle="patient_ctxt_sco" OperationTarget="h_patient_context"
+				xsi:type="ns3:SetContextStateOperationDescriptor" />
+			<ns3:Operation
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				Handle="workflow_ctxt_sco" OperationTarget="h_workflow_context"
+				xsi:type="ns3:SetContextStateOperationDescriptor" />
+			<ns3:Operation
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				Handle="num_met_sco_0" OperationTarget="num_met"
+				xsi:type="ns3:SetValueOperationDescriptor" />
+		</ns3:Sco>
+		<ns3:MetaData>
+			<ns3:Udi>
+				<ns3:DeviceIdentifier>UDI_1234</ns3:DeviceIdentifier>
+				<ns3:HumanReadableForm>UDI_1234_HR</ns3:HumanReadableForm>
+				<ns3:Issuer Extension="whatev" Root="root" />
+			</ns3:Udi>
+			<ns3:Manufacturer Lang="en">OR.NET</ns3:Manufacturer>
+			<ns3:ModelName Lang="en">SDCLib Demo device</ns3:ModelName>
+		</ns3:MetaData>
+		<ns3:SystemContext Handle="handle_sc">
+			<ns3:PatientContext Handle="h_patient_context" />		
+			<ns3:LocationContext Handle="h_location_context" />
+			<ns3:WorkflowContext Handle="h_workflow_context" />
+		</ns3:SystemContext>
+		<ns3:Vmd Handle="handle_vmd">
+			<ns3:AlertSystem Handle="handler_alert_system">
+				<ns3:Type Code="MDCX_CODE_ID_ALERT_SYSTEM" />
+				<ns3:AlertCondition
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					Handle="handle_limit_alert_condition" Kind="Tec" Priority="Me"
+					xsi:type="ns3:LimitAlertConditionDescriptor">
+					<ns3:Type Code="MDCX_CODE_ID_ALERT_NUMERIC_CONDITION" />
+					<ns3:Source>num_met</ns3:Source>
+					<ns3:CauseInfo>
+						<ns3:RemedyInfo />
+					</ns3:CauseInfo>
+					<ns3:MaxLimits Lower="0" Upper="10" />
+				</ns3:AlertCondition>
+				<ns3:AlertSignal
+					ConditionSignaled="handle_limit_alert_condition"
+					Handle="handle_alert_signal_latching" Latching="true"
+					Manifestation="Vis">
+					<ns2:Extension>
+						<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+					</ns2:Extension>
+					<ns3:Type Code="MDCX_CODE_ID_ALERT_NUMERIC_SIGNAL" />
+				</ns3:AlertSignal>
+			</ns3:AlertSystem>
+			<ns3:Channel Handle="handle_chn">
+				<ns3:Metric
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					Handle="num_met" MetricAvailability="Cont" MetricCategory="Set"
+					Resolution="1" xsi:type="ns3:NumericMetricDescriptor">
+					<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+					<ns3:Unit Code="MDCX_MY_UNIT" CodingSystem="11073" />
+				</ns3:Metric>
+				<ns3:Metric
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					Handle="string_met" MetricAvailability="Cont"
+					MetricCategory="Msrmt" xsi:type="ns3:StringMetricDescriptor">
+					<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+					<ns3:Unit Code="MDCX_MY_UNIT" CodingSystem="11073" />
+				</ns3:Metric>
+				<ns3:Metric
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					Handle="string_met_2" MetricAvailability="Cont"
+					MetricCategory="Msrmt" xsi:type="ns3:StringMetricDescriptor">
+					<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+					<ns3:Unit Code="MDCX_MY_UNIT" CodingSystem="11073" />
+				</ns3:Metric>
+				<ns3:Metric
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					Handle="enum_string_met" MetricAvailability="Cont"
+					MetricCategory="Set" xsi:type="ns3:EnumStringMetricDescriptor">
+					<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" />
+					<ns3:Unit Code="MDCX_MY_UNIT" CodingSystem="11073" />
+					<ns3:AllowedValue><ns3:Value>Foo</ns3:Value></ns3:AllowedValue>
+					<ns3:AllowedValue><ns3:Value>Bar</ns3:Value></ns3:AllowedValue>
+				</ns3:Metric>
+				<!-- <ns3:Metric xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+					Handle="handle_stream" MetricAvailability="Cont" MetricCategory="Msrmt" Resolution="1" 
+					SamplePeriod="P0Y0M0DT0H0M0.010S" xsi:type="ns3:RealTimeSampleArrayMetricDescriptor"> 
+					<ns3:Type Code="MDCX_MY_TYPE" CodingSystem="11073" /> <ns3:Unit Code="MDCX_MY_UNIT" 
+					CodingSystem="11073" /> </ns3:Metric> -->
+			</ns3:Channel>
+		</ns3:Vmd>
+	</ns3:Mds>
+</ns4:MdDescription>
+</ns4:GetMdDescriptionResponse>

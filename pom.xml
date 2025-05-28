@@ -205,10 +205,39 @@ SAX2 and Stax2 APIs
             <version>4.11.0</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
       <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <version>3.13.0</version>
+              <configuration>
+                  <source>9</source>
+                  <target>9</target>
+                  <annotationProcessorPaths>
+                      <path>
+                          <groupId>org.openjdk.jmh</groupId>
+                          <artifactId>jmh-generator-annprocess</artifactId>
+                          <version>1.37</version>
+                      </path>
+                  </annotationProcessorPaths>
+              </configuration>
+          </plugin>
 	<!-- 10-Jul-2021, tatu: Add code coverage again -->
 	<plugin>
           <groupId>org.jacoco</groupId>
