@@ -794,7 +794,12 @@ public final class AttributeCollector
             if (mAttributes == null) {
                 allocBuffers();
             }
-            mAttributes[0] = new Attribute(attrPrefix, attrLocalName, 0);
+            Attribute curr = mAttributes[0];
+            if (curr == null) {
+                mAttributes[0] = new Attribute(attrPrefix, attrLocalName, 0);
+            } else {
+                curr.reset(attrPrefix, attrLocalName, 0);
+            }
         } else {
             int valueStart = mValueBuilder.getCharSize();
             if (mAttrCount >= mAttributes.length) { // lgtm [java/dereferenced-value-may-be-null]
@@ -916,7 +921,12 @@ public final class AttributeCollector
             if (mNamespaces == null) {
                 mNamespaces = new Attribute[Math.min(EXP_NS_COUNT, mMaxAttributesPerElement)];
             }
-            mNamespaces[0] = new Attribute(null, prefix, 0);
+            Attribute curr = mNamespaces[0];
+            if (curr == null) {
+                mNamespaces[0] = new Attribute(null, prefix, 0);
+            } else {
+                curr.reset(null, prefix, 0);
+            }
         } else {
             int len = mNsCount;
             // Ok: must ensure that there are no duplicate namespace
