@@ -172,7 +172,6 @@ public abstract class BaseInputSource
             if (pl == null) {
                 mParentLocation = pl = mParent.getLocation();
             }
-            pl = mParent.getLocation();
         }
         /* !!! 15-Apr-2005, TSa: This will cause overflow for total count,
          *   but since StAX 1.0 API doesn't have any way to deal with that,

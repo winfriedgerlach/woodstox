@@ -12,6 +12,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.codehaus.stax2.XMLStreamLocation2;
 import org.codehaus.stax2.XMLStreamReader2;
 
 import com.ctc.wstx.stax.WstxInputFactory;
@@ -265,7 +266,36 @@ public class TestLocation
     }
     
     /**
-     * This test was added due to bug [WSTX-67]: Wrong line number for XML event 
+     * Locations within an expanded entity have the location of the reference
+     * as their context: as that can not change during expansion, it is to be
+     * reused, not re-created for each location.
+     */
+    @Test
+    public void testLocationContextInEntity()
+        throws XMLStreamException
+    {
+        final String XML = "<!DOCTYPE root [\n<!ENTITY e '<a/><b/>'>\n]>\n<root>&e;</root>";
+
+        XMLInputFactory f = getWstxInputFactory();
+        XMLStreamReader2 sr = (XMLStreamReader2)f.createXMLStreamReader(new StringReader(XML));
+        assertTokenType(DTD, sr.next());
+        assertTokenType(START_ELEMENT, sr.next());
+        assertTokenType(START_ELEMENT, sr.next());
+        assertEquals("a", sr.getLocalName());
+        XMLStreamLocation2 ctxtA = ((XMLStreamLocation2) sr.getLocation()).getContext();
+        assertTokenType(END_ELEMENT, sr.next());
+        assertTokenType(START_ELEMENT, sr.next());
+        assertEquals("b", sr.getLocalName());
+        XMLStreamLocation2 ctxtB = ((XMLStreamLocation2) sr.getLocation()).getContext();
+
+        assertNotNull(ctxtA);
+        assertEquals(4, ctxtA.getLineNumber());
+        assertSame(ctxtA, ctxtB);
+        sr.close();
+    }
+
+    /**
+     * This test was added due to bug [WSTX-67]: Wrong line number for XML event
      * location in elements following comment with no spaces, split across 
      * multiple lines.
      */
