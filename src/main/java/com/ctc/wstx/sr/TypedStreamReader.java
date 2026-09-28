@@ -79,6 +79,14 @@ public class TypedStreamReader
      */
     protected CharArrayBase64Decoder _base64Decoder = null;
 
+    /**
+     * Token state a textual event needs to be in before its content can be
+     * decoded: when coalescing, adjacent text and CDATA only become part of
+     * it once fully coalesced, and would otherwise be skipped by
+     * {@link #next}.
+     */
+    protected final int mStTypedTextThreshold;
+
     /*
     ////////////////////////////////////////////////////
     // Instance construction
@@ -92,6 +100,7 @@ public class TypedStreamReader
         throws XMLStreamException
     {
         super(bs, input, owner, cfg, elemStack, forER);
+        mStTypedTextThreshold = mCfgCoalesceText ? TOKEN_FULL_COALESCED : TOKEN_FULL_SINGLE;
     }
 
     /**
@@ -248,15 +257,16 @@ public class TypedStreamReader
             }
             break;
         }
-        if (mTokenState < TOKEN_FULL_SINGLE) {
+        if (mTokenState < mStTypedTextThreshold
+                // (full segment directly followed by end tag has nothing to coalesce with)
+                && (mTokenState < TOKEN_FULL_SINGLE || !isEndTagNext())) {
             readCoalescedText(mCurrToken, false);
         }
         /* Ok: then a quick check; if it looks like we are directly
          * followed by the end tag, we need not construct String
          * quite yet.
          */
-        if ((mInputPtr + 1) < mInputEnd &&
-            mInputBuffer[mInputPtr] == '<' && mInputBuffer[mInputPtr+1] == '/') {
+        if (isEndTagNext()) {
             // Note: next() has validated text, no need for more validation
             mInputPtr += 2;
             mCurrToken = END_ELEMENT;
@@ -282,7 +292,7 @@ public class TypedStreamReader
         
         while ((type = next()) != END_ELEMENT) {
             if (((1 << type) & MASK_GET_ELEMENT_TEXT) != 0) {
-                if (mTokenState < TOKEN_FULL_SINGLE) {
+                if (mTokenState < mStTypedTextThreshold) {
                     readCoalescedText(type, false);
                 }
                 mTextBuffer.contentsToStringBuilder(sb);
@@ -392,7 +402,7 @@ public class TypedStreamReader
              * boundary from splitting tokens
              */
             if (type == CHARACTERS || type == CDATA || type == SPACE) {
-                if (mTokenState < TOKEN_FULL_SINGLE) {
+                if (mTokenState < mStTypedTextThreshold) {
                     readCoalescedText(type, false);
                 }
             } else if (type == COMMENT || type == PROCESSING_INSTRUCTION) {
@@ -753,6 +763,15 @@ public class TypedStreamReader
             _base64Decoder = new CharArrayBase64Decoder();
         }
         return _base64Decoder;
+    }
+
+    /**
+     * @return True if the input buffer is known to continue with an end tag
+     */
+    private boolean isEndTagNext()
+    {
+        return (mInputPtr + 1) < mInputEnd
+            && mInputBuffer[mInputPtr] == '<' && mInputBuffer[mInputPtr+1] == '/';
     }
 
     /**
