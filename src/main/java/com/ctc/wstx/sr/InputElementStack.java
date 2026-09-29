@@ -976,6 +976,24 @@ public final class InputElementStack
         return mCurrElement.mLocalName;
     }
 
+    /**
+     * @return Local name of the current element, prefixed with its prefix
+     *   and a colon if it has one; built only once per element
+     */
+    public final String getPrefixedName() {
+        if (mDepth == 0) {
+            throw new IllegalStateException("Illegal access, empty stack.");
+        }
+        Element elem = mCurrElement;
+        String name = elem.mPrefixedName;
+        if (name == null) {
+            String prefix = elem.mPrefix;
+            name = (prefix == null) ? elem.mLocalName : (prefix + ":" + elem.mLocalName);
+            elem.mPrefixedName = name;
+        }
+        return name;
+    }
+
     public final boolean matches(String prefix, String localName)
     {
         if (mDepth == 0) {

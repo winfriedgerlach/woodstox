@@ -45,6 +45,12 @@ final class Element
      */
     protected String mDefaultNsURI;
 
+    /**
+     * Prefixed name ("prefix:localName"), once built; so that it is only
+     * built once for start and end tag.
+     */
+    protected String mPrefixedName;
+
     // // // Namespace support
 
     /**
@@ -86,6 +92,7 @@ final class Element
         mPrefix = prefix;
         mLocalName = ln;
         mChildCount = 0;
+        mPrefixedName = null;
     }
 
     /**

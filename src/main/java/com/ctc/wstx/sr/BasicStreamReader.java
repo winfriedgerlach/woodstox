@@ -1516,19 +1516,7 @@ public abstract class BasicStreamReader
         switch (mCurrToken) {
         case START_ELEMENT:
         case END_ELEMENT:
-            {
-                String prefix = mElementStack.getPrefix();
-                String ln = mElementStack.getLocalName();
-
-                if (prefix == null) {
-                    return ln;
-                }
-                StringBuilder sb = new StringBuilder(ln.length() + 1 + prefix.length());
-                sb.append(prefix);
-                sb.append(':');
-                sb.append(ln);
-                return sb.toString();
-            }
+            return mElementStack.getPrefixedName();
         case ENTITY_REFERENCE:
             return getLocalName();
         case PROCESSING_INSTRUCTION:
