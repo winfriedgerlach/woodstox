@@ -117,6 +117,7 @@ import com.ctc.wstx.io.SystemId;
 import com.ctc.wstx.sr.*;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.util.ExceptionUtil;
+import com.ctc.wstx.util.PrefixedNameCache;
 import com.ctc.wstx.util.URLUtil;
 
 /**
@@ -200,6 +201,13 @@ public class WstxSAXParser
      * {@link #mFeatNsPrefixes}).
      */
     protected int mNsCount = 0;
+
+    /**
+     * Cache for qualified names of prefixed elements, attributes (and
+     * namespace declarations); created when first needed, and kept over
+     * documents.
+     */
+    protected PrefixedNameCache mQNames;
 
     /*
     /////////////////////////////////////////////////
@@ -716,7 +724,7 @@ public class WstxSAXParser
                 fireStartTag();
                 ++depth;
             } else if (type == XMLStreamConstants.END_ELEMENT) {
-                mScanner.fireSaxEndElement(mContentHandler);
+                fireEndTag();
                 if (--depth < 1) {
                     break;
                 }
@@ -828,7 +836,40 @@ public class WstxSAXParser
             //mNsCount = mAttrCollector.getNsCount();
             mNsCount = mElemStack.getCurrentNsCount();
         }
-        mScanner.fireSaxStartElement(mContentHandler, this);
+        ContentHandler h = mContentHandler;
+        if (h != null) {
+            // First; any ns declarations?
+            int nsCount = mElemStack.getCurrentNsCount();
+            for (int i = 0; i < nsCount; ++i) {
+                String prefix = mElemStack.getLocalNsPrefix(i);
+                h.startPrefixMapping((prefix == null) ? "" : prefix, mElemStack.getLocalNsURI(i));
+            }
+            String uri = mElemStack.getNsURI();
+            h.startElement((uri == null) ? "" : uri, mElemStack.getLocalName(), elementQName(), this);
+        }
+    }
+
+    private final void fireEndTag()
+        throws SAXException
+    {
+        ContentHandler h = mContentHandler;
+        if (h != null) {
+            // First the end tag, then unbound prefixes
+            String uri = mElemStack.getNsURI();
+            h.endElement((uri == null) ? "" : uri, mElemStack.getLocalName(), elementQName());
+            int nsCount = mElemStack.getCurrentNsCount();
+            for (int i = 0; i < nsCount; ++i) {
+                String prefix = mElemStack.getLocalNsPrefix(i);
+                h.endPrefixMapping((prefix == null) ? "" : prefix);
+            }
+        }
+    }
+
+    private String elementQName()
+    {
+        String prefix = mElemStack.getPrefix();
+        String ln = mElemStack.getLocalName();
+        return (prefix == null) ? ln : qNameCache().get(prefix, ln);
     }
 
     /*
@@ -916,7 +957,7 @@ public class WstxSAXParser
             String prefix = mAttrCollector.getPrefix(index);
             String ln = mAttrCollector.getLocalName(index);
             return (prefix == null || prefix.length() == 0) ?
-                ln : (prefix + ":" + ln);
+                ln : qNameCache().get(prefix, ln);
         }
         index -= mAttrCount;
         if (index < mNsCount) {
@@ -928,9 +969,17 @@ public class WstxSAXParser
             if (prefix == null || prefix.length() == 0) {
                 return "xmlns";
             }
-            return "xmlns:"+prefix;
+            return qNameCache().get("xmlns", prefix);
         }
         return null;
+    }
+
+    private PrefixedNameCache qNameCache()
+    {
+        if (mQNames == null) {
+            mQNames = new PrefixedNameCache();
+        }
+        return mQNames;
     }
 
     @Override
