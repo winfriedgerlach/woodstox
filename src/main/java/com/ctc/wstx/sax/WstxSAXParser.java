@@ -117,6 +117,7 @@ import com.ctc.wstx.io.SystemId;
 import com.ctc.wstx.sr.*;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.util.ExceptionUtil;
+import com.ctc.wstx.util.PrefixedNameCache;
 import com.ctc.wstx.util.URLUtil;
 
 /**
@@ -200,6 +201,13 @@ public class WstxSAXParser
      * {@link #mFeatNsPrefixes}).
      */
     protected int mNsCount = 0;
+
+    /**
+     * Cache for qualified names of prefixed elements, attributes (and
+     * namespace declarations); created when first needed, and kept over
+     * documents.
+     */
+    protected PrefixedNameCache mQNames;
 
     /*
     /////////////////////////////////////////////////
@@ -632,6 +640,8 @@ public class WstxSAXParser
             mStandalone = mScanner.standaloneSet();
             mAttrCollector = mScanner.getAttributeCollector();
             mElemStack = mScanner.getInputElementStack();
+            // Same cache for qualified names of elements and attributes
+            mScanner.setPrefixedNameCache(qNameCache());
 
             if (mContentHandler != null) {
                 mContentHandler.setDocumentLocator(this);
@@ -916,7 +926,7 @@ public class WstxSAXParser
             String prefix = mAttrCollector.getPrefix(index);
             String ln = mAttrCollector.getLocalName(index);
             return (prefix == null || prefix.length() == 0) ?
-                ln : (prefix + ":" + ln);
+                ln : qNameCache().get(prefix, ln);
         }
         index -= mAttrCount;
         if (index < mNsCount) {
@@ -928,9 +938,17 @@ public class WstxSAXParser
             if (prefix == null || prefix.length() == 0) {
                 return "xmlns";
             }
-            return "xmlns:"+prefix;
+            return qNameCache().get("xmlns", prefix);
         }
         return null;
+    }
+
+    private PrefixedNameCache qNameCache()
+    {
+        if (mQNames == null) {
+            mQNames = new PrefixedNameCache();
+        }
+        return mQNames;
     }
 
     @Override

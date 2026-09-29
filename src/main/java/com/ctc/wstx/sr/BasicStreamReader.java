@@ -48,6 +48,7 @@ import com.ctc.wstx.exc.WstxException;
 import com.ctc.wstx.io.*;
 import com.ctc.wstx.util.DefaultXmlSymbolTable;
 import com.ctc.wstx.util.ExceptionUtil;
+import com.ctc.wstx.util.PrefixedNameCache;
 import com.ctc.wstx.util.StringUtil;
 import com.ctc.wstx.util.TextBuffer;
 import com.ctc.wstx.util.TextBuilder;
@@ -210,6 +211,13 @@ public abstract class BasicStreamReader
      * as to query for additional config settings if necessary.
      */
     final protected ReaderCreator mOwner;
+
+    /**
+     * Cache for names returned by {@link #getPrefixedName}, if one has been
+     * set (by the SAX parser, which keeps it over documents); otherwise
+     * names are built for each call.
+     */
+    protected PrefixedNameCache mPrefixedNames;
 
     /*
     ///////////////////////////////////////////////////////////////////////
@@ -1523,6 +1531,9 @@ public abstract class BasicStreamReader
                 if (prefix == null) {
                     return ln;
                 }
+                if (mPrefixedNames != null) {
+                    return mPrefixedNames.get(prefix, ln);
+                }
                 StringBuilder sb = new StringBuilder(ln.length() + 1 + prefix.length());
                 sb.append(prefix);
                 sb.append(':');
@@ -1785,6 +1796,14 @@ public abstract class BasicStreamReader
     // Support for SAX XMLReader implementation
     ///////////////////////////////////////////////////////////////////////
      */
+
+    /**
+     * Method for setting the cache to use for names returned by
+     * {@link #getPrefixedName}: the SAX parser keeps one over documents.
+     */
+    public void setPrefixedNameCache(PrefixedNameCache cache) {
+        mPrefixedNames = cache;
+    }
 
     public void fireSaxStartElement(ContentHandler h, Attributes attrs)
         throws SAXException
