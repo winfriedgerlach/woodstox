@@ -71,6 +71,14 @@ public final class BufferingXmlWriter
     protected final static int HIGHEST_ENCODABLE_ATTR_CHAR = '<';
 
     /**
+     * Chars that need escaping in attribute values (except for the quote
+     * char), as a bit mask indexed by char: control chars, {@code '<'} and
+     * {@code '&'}.
+     */
+    private final static long ATTR_SPECIAL_CHARS = 0xFFFFFFFFL
+        | (1L << '&') | (1L << '<');
+
+    /**
      * Highest valued character that may need to be encoded (minus charset
      * encoding requirements) when writing attribute values.
      */
@@ -1130,6 +1138,7 @@ public final class BufferingXmlWriter
         int inPtr = 0;
         final char qchar = mEncQuoteChar;
         final int highChar = mEncHighChar;
+        final long specials = ATTR_SPECIAL_CHARS | (1L << qchar);
 
         while (true) {
             // First find the run of chars that can be output as is...
@@ -1137,11 +1146,7 @@ public final class BufferingXmlWriter
             char c = 0;
             for (; inPtr < len; ++inPtr) {
                 c = value.charAt(inPtr);
-                if (c <= HIGHEST_ENCODABLE_ATTR_CHAR) { // special char?
-                    if (c < 0x0020 || c == qchar || c == '<' || c == '&') {
-                        break;
-                    }
-                } else if (c >= highChar) { // out of range, have to escape
+                if (isSpecialAttrChar(c, specials) || c >= highChar) {
                     break;
                 }
             }
@@ -1193,6 +1198,7 @@ public final class BufferingXmlWriter
         len += offset;
         final char qchar = mEncQuoteChar;
         final int highChar = mEncHighChar;
+        final long specials = ATTR_SPECIAL_CHARS | (1L << qchar);
 
         while (true) {
             // First find the run of chars that can be output as is...
@@ -1200,11 +1206,7 @@ public final class BufferingXmlWriter
             char c = 0;
             for (; offset < len; ++offset) {
                 c = value[offset];
-                if (c <= HIGHEST_ENCODABLE_ATTR_CHAR) { // special char?
-                    if (c < 0x0020 || c == qchar || c == '<' || c == '&') {
-                        break;
-                    }
-                } else if (c >= highChar) { // out of range, have to escape
+                if (isSpecialAttrChar(c, specials) || c >= highChar) {
                     break;
                 }
             }
@@ -1248,6 +1250,19 @@ public final class BufferingXmlWriter
                 offset += writeAsEntityCombined(c, next, true);
             }
         }
+    }
+
+    /**
+     * Branch-free test for chars that need escaping in attribute values
+     * (below the encoding's high char): control chars, the quote char,
+     * {@code '<'} and {@code '&'}. {@code specials} has a bit set for each
+     * of them; chars from 64 up are never special.
+     */
+    private static boolean isSpecialAttrChar(char c, long specials)
+    {
+        // Shift distance of a long only uses its lowest 6 bits: chars from 64 up
+        // would wrap around, so they are masked out by the sign of (c - 64)
+        return ((specials >>> c) & ((c - 64) >> 31) & 1L) != 0L;
     }
 
     private final void writeAttrChar(char c)
