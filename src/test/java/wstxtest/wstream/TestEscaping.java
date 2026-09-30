@@ -33,11 +33,65 @@ public class TestEscaping
         doTestCrHandling(false, "CrLF: \r\n.", "CrLF: \n.", "CrLF:  \n.");
     }
 
+    // Attribute values longer than the output buffer, with chars that need
+    // escaping at shifting positions, must round-trip unchanged
+    @Test
+    public void testLongAttrValueEscaping()
+        throws XMLStreamException
+    {
+        final String specials = "\"&<>\t\n\u00e9\u3000\ud83d\ude00";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; sb.length() < 3000; ++i) {
+            sb.append("abcdefghij".substring(0, i % 10));
+            char c = specials.charAt(i % specials.length());
+            if (Character.isHighSurrogate(c)) {
+                sb.append(c).append(specials.charAt(specials.length()-1));
+            } else if (!Character.isLowSurrogate(c)) {
+                sb.append(c);
+            }
+        }
+        final String value = sb.toString();
+
+        for (String enc : new String[] { "UTF-8", "ISO-8859-1", "US-ASCII" }) {
+            for (int type = 0; type < 3; ++type) {
+                XMLOutputFactory2 f = getFactory(type, true);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                XMLStreamWriter sw = f.createXMLStreamWriter(out, enc);
+                sw.writeStartDocument();
+                sw.writeStartElement("root");
+                for (int i = 0; i < 20; ++i) {
+                    sw.writeStartElement("e");
+                    sw.writeAttribute("a", value.substring(pairStart(value, i * 37)));
+                    sw.writeCharacters(value.substring(0, pairStart(value, i * 11)));
+                    sw.writeEndElement();
+                }
+                sw.writeEndElement();
+                sw.writeEndDocument();
+                sw.close();
+
+                XMLStreamReader2 sr = constructNsStreamReader(new ByteArrayInputStream(out.toByteArray()), true);
+                assertTokenType(START_ELEMENT, sr.next());
+                for (int i = 0; i < 20; ++i) {
+                    assertTokenType(START_ELEMENT, sr.next());
+                    assertEquals("Attribute value #"+i+" (encoding: "+enc+", writer type: "+type+")",
+                            value.substring(pairStart(value, i * 37)), sr.getAttributeValue(0));
+                    sr.getElementText();
+                }
+                sr.close();
+            }
+        }
+    }
+
     /*
     ////////////////////////////////////////////////////
     // Helper methods
     ////////////////////////////////////////////////////
      */
+
+    // Moves an index off the second half of a surrogate pair
+    private static int pairStart(String str, int index) {
+        return Character.isLowSurrogate(str.charAt(index)) ? index + 1 : index;
+    }
 
     private void doTestCrHandling(boolean escaping, String input,
                                   String elemOutput, String attrOutput)

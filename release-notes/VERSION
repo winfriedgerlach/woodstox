@@ -4,6 +4,11 @@ Project: woodstox
 === Releases ===
 ------------------------------------------------------------------------
 
+(not yet released)
+
+#349: Speed up attribute value escaping in `BufferingXmlWriter`
+ (contributed by @winfriedgerlach)
+
 7.3.0 (28-Sep-2026)
 
 #305: Fix XML 1.1 Restricted Character Validation for Reader Inputs

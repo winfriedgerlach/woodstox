@@ -1129,53 +1129,60 @@ public final class BufferingXmlWriter
     {
         int inPtr = 0;
         final char qchar = mEncQuoteChar;
-        int highChar = mEncHighChar;
+        final int highChar = mEncHighChar;
 
-        main_loop:
-        while (true) { // main_loop
-            String ent = null;
-
-            inner_loop:
-            while (true) {
-                if (inPtr >= len) {
-                    break main_loop;
-                }
-                char c = value.charAt(inPtr++);
+        while (true) {
+            // First find the run of chars that can be output as is...
+            int start = inPtr;
+            char c = 0;
+            for (; inPtr < len; ++inPtr) {
+                c = value.charAt(inPtr);
                 if (c <= HIGHEST_ENCODABLE_ATTR_CHAR) { // special char?
-                    if (c < 0x0020) { // tab, cr/lf need encoding too
-                        if (c == '\r') {
-                            if (mEscapeCR) {
-                                break inner_loop; // quoting
-                            }
-                        } else if (c != '\n' && c != '\t'
-                            && (!mXml11 || c == 0)) {
-                            c = handleInvalidChar(c);
-                        } else {
-                            break inner_loop; // need quoting
-                        }
-                    } else if (c == qchar) {
-                        ent = mEncQuoteEntity;
-                        break inner_loop;
-                    } else if (c == '<') {
-                        ent = "&lt;";
-                        break inner_loop;
-                    } else if (c == '&') {
-                        ent = "&amp;";
-                        break inner_loop;
+                    if (c < 0x0020 || c == qchar || c == '<' || c == '&') {
+                        break;
                     }
                 } else if (c >= highChar) { // out of range, have to escape
-                    break inner_loop;
+                    break;
                 }
+            }
+            // ... and copy it in one go
+            while (start < inPtr) {
                 if (mOutputPtr >= mOutputBufLen) {
                     flushBuffer();
                 }
-                mOutputBuffer[mOutputPtr++] = c;
+                int end = Math.min(inPtr, start + (mOutputBufLen - mOutputPtr));
+                value.getChars(start, end, mOutputBuffer, mOutputPtr);
+                mOutputPtr += (end - start);
+                start = end;
+            }
+            if (inPtr >= len) {
+                break;
+            }
+            ++inPtr;
+            String ent = null;
+            if (c < 0x0020) { // tab, cr/lf need encoding too
+                if (c == '\r') {
+                    if (!mEscapeCR) {
+                        writeAttrChar(c);
+                        continue;
+                    }
+                } else if (c != '\n' && c != '\t'
+                    && (!mXml11 || c == 0)) {
+                    writeAttrChar(handleInvalidChar(c));
+                    continue;
+                }
+            } else if (c == qchar) {
+                ent = mEncQuoteEntity;
+            } else if (c == '<') {
+                ent = "&lt;";
+            } else if (c == '&') {
+                ent = "&amp;";
             }
             if (ent != null) {
                 writeRaw(ent);
             } else {
                 int next = (inPtr < len) ? value.charAt(inPtr) : -1;
-                inPtr += writeAsEntityCombined(value.charAt(inPtr-1), next, true);
+                inPtr += writeAsEntityCombined(c, next, true);
             }
         }
     }
@@ -1185,55 +1192,71 @@ public final class BufferingXmlWriter
     {
         len += offset;
         final char qchar = mEncQuoteChar;
-        int highChar = mEncHighChar;
+        final int highChar = mEncHighChar;
 
-        main_loop:
-        while (true) { // main_loop
-            String ent = null;
-
-            inner_loop:
-            while (true) {
-                if (offset >= len) {
-                    break main_loop;
-                }
-                char c = value[offset++];
+        while (true) {
+            // First find the run of chars that can be output as is...
+            int start = offset;
+            char c = 0;
+            for (; offset < len; ++offset) {
+                c = value[offset];
                 if (c <= HIGHEST_ENCODABLE_ATTR_CHAR) { // special char?
-                    if (c < 0x0020) { // tab, cr/lf need encoding too
-                        if (c == '\r') {
-                            if (mEscapeCR) {
-                                break inner_loop; // quoting
-                            }
-                        } else if (c != '\n' && c != '\t'
-                            && (!mXml11 || c == 0)) {
-                            c = handleInvalidChar(c);
-                        } else {
-                            break inner_loop; // need quoting
-                        }
-                    } else if (c == qchar) {
-                        ent = mEncQuoteEntity;
-                        break inner_loop;
-                    } else if (c == '<') {
-                        ent = "&lt;";
-                        break inner_loop;
-                    } else if (c == '&') {
-                        ent = "&amp;";
-                        break inner_loop;
+                    if (c < 0x0020 || c == qchar || c == '<' || c == '&') {
+                        break;
                     }
                 } else if (c >= highChar) { // out of range, have to escape
-                    break inner_loop;
+                    break;
                 }
+            }
+            // ... and copy it in one go
+            while (start < offset) {
                 if (mOutputPtr >= mOutputBufLen) {
                     flushBuffer();
                 }
-                mOutputBuffer[mOutputPtr++] = c;
+                int count = Math.min(offset - start, mOutputBufLen - mOutputPtr);
+                System.arraycopy(value, start, mOutputBuffer, mOutputPtr, count);
+                mOutputPtr += count;
+                start += count;
+            }
+            if (offset >= len) {
+                break;
+            }
+            ++offset;
+            String ent = null;
+            if (c < 0x0020) { // tab, cr/lf need encoding too
+                if (c == '\r') {
+                    if (!mEscapeCR) {
+                        writeAttrChar(c);
+                        continue;
+                    }
+                } else if (c != '\n' && c != '\t'
+                    && (!mXml11 || c == 0)) {
+                    writeAttrChar(handleInvalidChar(c));
+                    continue;
+                }
+            } else if (c == qchar) {
+                ent = mEncQuoteEntity;
+            } else if (c == '<') {
+                ent = "&lt;";
+            } else if (c == '&') {
+                ent = "&amp;";
             }
             if (ent != null) {
                 writeRaw(ent);
             } else {
                 int next = (offset < len) ? value[offset] : -1;
-                offset += writeAsEntityCombined(value[offset-1], next, true);
+                offset += writeAsEntityCombined(c, next, true);
             }
         }
+    }
+
+    private final void writeAttrChar(char c)
+        throws IOException
+    {
+        if (mOutputPtr >= mOutputBufLen) {
+            flushBuffer();
+        }
+        mOutputBuffer[mOutputPtr++] = c;
     }
 
     /*
